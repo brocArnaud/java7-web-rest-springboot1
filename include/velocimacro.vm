@@ -9,12 +9,14 @@ package ${target.javaPackageFromFolder($ref)};
 #end
 ## Define imports velocimacro
 ## Adding import for the entity
-#macro(imports $attrs)
+#macro(imports $attrs $isJpa)
 #foreach($import in $java.imports($attrs))
 import $import;
 #end
+#if($isJpa)
 #foreach($import in $jpa.imports($entity))
 import $import;
+#end
 #end
 #end
 ## Resolve the key type for a given entity. Can be composite as well wrapper type 
@@ -25,5 +27,83 @@ import $import;
 #set($keyType = $entityKeyClass)
 #else
 #set($keyType = $entity.keyAttributes[0].wrapperType)
+#end
+#end
+## Define mock value for given field - ONLY USED IN TEST
+## feed variable $mockValue with a correct value following type
+#macro(mockValue $field)
+#if(${field.type} == 'Short')
+#set($mockValue =  "new Short((short)1)")
+#elseif(${field.type} == 'Integer')
+#set($mockValue =  "new Integer((int)1)")
+#elseif(${field.type} == 'Long')
+#set($mockValue =  "new Long((long)1L)")
+#elseif(${field.type} == 'Float')
+#set($mockValue =  "new Float((float)1.0)")
+#elseif(${field.type} == 'Double')
+#set($mockValue =  "new Double((double)1.0)")
+#elseif(${field.type} == 'BigDecimal')
+#set($mockValue =  "new BigDecimal(1.0)")
+#elseif(${field.type} == 'Boolean')
+#set($mockValue =  "true")
+#elseif(${field.type} == 'Date')
+#set($mockValue =  "new Date()")
+#elseif(${field.type} == 'String')
+#set($reservedSizeStr =  "aa")
+#set($reservedSize =  $reservedSizeStr.length())
+#set($fieldMaxSize =  ${field.maxLength})
+#set($fieldName =  ${field.name})
+#set($fieldNameSize = $fieldName.length())
+#set($Integer =  0)
+#set($fieldMaxSizeInt =  $Integer.parseInt($fieldMaxSize))
+#set($fieldSizeWithReserved = $reservedSize + $fieldNameSize)
+#set($compare = $fieldMaxSizeInt < $fieldSizeWithReserved)
+## Ensure mock value not exced max size - reduce by 2 because we generate record using loop up to 21 so we need 2 more char on basic mock value
+#if($compare)
+#set($mockValue =  "${QUOT}1${QUOT}")
+#else
+#set($mockValue =  "${QUOT}$field.name${QUOT}")
+#end
+#else
+#set($restrictedType =  ${fieldType})
+#end
+#end
+## Define mock value for given field - ONLY USED IN TEST
+## feed variable $mockNewValue with a correct value following type
+#macro(mockNewValue $field)
+#if(${field.type} == 'Short')
+#set($mockNewValue =  "new Short((short) 2)")
+#elseif(${field.type} == 'Long')
+#set($mockNewValue =  "new Long((long) 2)")
+#elseif(${field.type} == 'Integer')
+#set($mockNewValue =  "new Integer((int) 2)")
+#elseif(${field.type} == 'Float')
+#set($mockNewValue =  "new Float((float) 2.0)")
+#elseif(${field.type} == 'Double')
+#set($mockNewValue =  "new Double((double) 2.0)")
+#elseif(${field.type} == 'BigDecimal')
+#set($mockNewValue =  "new BigDecimal(2.0)")
+#elseif(${field.type} == 'Boolean')
+#set($mockNewValue =  "false")
+#elseif(${field.type} == 'Date')
+#set($mockNewValue =  "new Date()")
+#elseif(${field.type} == 'String')
+#set($reservedSizeStr =  "aa")
+#set($reservedSize =  $reservedSizeStr.length())
+#set($fieldMaxSize =  ${field.maxLength})
+#set($fieldName =  "new${field.name}")
+#set($fieldNameSize = $fieldName.length())
+#set($Integer =  0)
+#set($fieldMaxSizeInt =  $Integer.parseInt($fieldMaxSize))
+#set($fieldSizeWithReserved = $reservedSize + $fieldNameSize)
+#set($compare = $fieldMaxSizeInt < $fieldSizeWithReserved)
+## Ensure mock value not exced max size - reduce by 2 because we generate record using loop up to 21 so we need 2 more char on basic mock value
+#if($compare)
+#set($mockNewValue =  "${QUOT}2${QUOT}")
+#else
+#set($mockNewValue =  "${QUOT}$field.name${QUOT}")
+#end
+#else
+#set($restrictedType =  ${fieldType})
 #end
 #end

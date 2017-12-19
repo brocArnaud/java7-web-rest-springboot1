@@ -3,6 +3,7 @@
 #set($pack_controller         = "${ROOT_PKG}.controller")
 #set($pack_assembler          = "${pack_controller}.assembler")
 #set($pack_resource           = "${pack_controller}.resource")
+#set($pack_mapper	          = "${pack_controller}.mapper")
 ## Entity package
 #set($pack_entity        	  = "${ROOT_PKG}.entity")
 ## Repository package

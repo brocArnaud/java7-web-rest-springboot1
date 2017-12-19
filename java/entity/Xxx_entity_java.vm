@@ -9,7 +9,7 @@ $generator.generate($target.entityName ,  "${entityKeyClass}.java", $target.fold
 
 import java.io.Serializable;
 ## Use macro resolve imports
-#imports($entity.attributes)
+#imports($entity.attributes true)
 
 /**
  * Persistent class for $entityClass entity stored in table $tableName.

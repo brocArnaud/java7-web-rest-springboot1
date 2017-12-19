@@ -5,7 +5,7 @@
 
 import java.io.Serializable;
 ## Use macro resolve imports
-#imports($entity.keyAttributes)
+#imports($entity.keyAttributes true)
 
 /**
  * Composite primary key for entity "$entityClass" ( stored in table "$tableName" )
