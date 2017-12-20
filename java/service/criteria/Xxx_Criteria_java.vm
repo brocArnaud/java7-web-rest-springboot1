@@ -9,16 +9,17 @@
  */
 public class $criteriaClass {
 
-#foreach($field in $entity.attributes)
+#foreach($field in $entity.nonKeyAttributes)
 #if($field.type == 'String')
     private $field.type $field.name; 
 #end
 #end
-
+	// Constructor
 	public $criteriaClass() {
+		// Needed empty constructor for serialization
 	}
 
-#foreach($field in $entity.attributes)
+#foreach($field in $entity.nonKeyAttributes)
 #if($field.type == 'String')
 #if($field.setter)    
 	public void ${field.setter}($field.type $field.name) {this.$field.name = $field.name;}
@@ -31,9 +32,9 @@ public class $criteriaClass {
 
 	@Override
 	public String toString() {
-		StringBuffer sb = new StringBuffer(); 
+		StringBuilder sb = new StringBuilder(); 
 #set( $count = 0 )
-#foreach( $field in $entity.attributes )
+#foreach( $field in $entity.nonKeyAttributes )
 #if($field.type == 'String')
 #if( $count > 0 )
 		sb.append("|"); 

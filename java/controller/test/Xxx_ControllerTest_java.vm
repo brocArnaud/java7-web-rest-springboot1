@@ -2,10 +2,19 @@
 #parse("include/var_entity.vm")
 ## Use macro resolve header
 #package($TEST_SRC)
-
+## use macro for feed $haveCriteria
+#haveCriteria()
 import static org.assertj.core.api.Assertions.assertThat;
 
+#set($haveBigDecimal	= false)
+#foreach($field in $entity.nonKeyAttributes)
+#if($field.type == 'BigDecimal')
+#set($haveBigDecimal	= true)
+#end
+#end
+#if($haveBigDecimal)
 import org.assertj.core.util.BigDecimalComparator;
+#end
 import ${pack_resource}.$resourceClass;
 import ${pack_entity}.$entityClass;
 import org.junit.Test;
@@ -39,11 +48,12 @@ public class ${controllerClass}Test {
 
 	@Autowired
 	private TestRestTemplate restTemplate;
-
+## Resolve mock argument for pk field
 #set($mockArgumentPk = '')
 #set($mockArgumentPkLoop = '')
 #set($mockParamsPk = '')
 #set($path='')
+#set($pathForNotFound='')
 #foreach($field in $entity.KeyAttributes)
 #if($foreach.count > 1)
 #set($mockArgumentPk = "${mockArgumentPk},")
@@ -52,7 +62,7 @@ public class ${controllerClass}Test {
 #end
 #mockValue($field)
 #set($mockArgumentPk = "${mockArgumentPk}$mockValue ")
-
+## Resolve mock argument for non pk field
 #if(${field.type} == 'Short')
 #set($mockArgumentPkLoop =  "${mockArgumentPkLoop}new Short((short)i)")
 #elseif(${field.type} == 'Integer')
@@ -74,12 +84,13 @@ public class ${controllerClass}Test {
 #else
 #set($mockArgumentPkLoop = "${mockArgumentPkLoop}i")
 #end
-
 #set($mockParamsPk = "${mockParamsPk}$field.type ${field.name}")
 #set($path = "${path}/1" )
+#set($pathForNotFound = "${pathForNotFound}/999" )
 #end
 ##
 #set($fullPath="/${entityInstance}${path}")
+#set($fullPathForNotFound="/${entityInstance}${pathForNotFound}")
 ##
 #set($mockArgument = '')
 #set($mockArgumentloop = '')
@@ -89,7 +100,6 @@ public class ${controllerClass}Test {
 #mockValue($field)
 	private static final $field.type $fn.toUpperCase($field.name) = $mockValue;
 #if($field.type == 'Date')
-	private static final $field.type ${fn.toUpperCase($field.name)}_ANOTHER = new Date();
 	#set($mockArgumentloop = "${mockArgumentloop}, new Date()")
 #elseif($field.type == 'BigDecimal')
 	#set($mockArgumentloop = "${mockArgumentloop},${fn.toUpperCase($field.name)}.add(new BigDecimal(i))")
@@ -215,7 +225,7 @@ public class ${controllerClass}Test {
 	public void updateNotFoundTest() {
 		// Process update
 		RequestEntity<${entityClass}> request = new RequestEntity<${entityClass}>(new ${entityClass}(), HttpMethod.PUT, null);
-		ResponseEntity<Void> resultUpdate = this.restTemplate.exchange("/${entityInstance}/999", HttpMethod.PUT, request,
+		ResponseEntity<Void> resultUpdate = this.restTemplate.exchange("$fullPathForNotFound", HttpMethod.PUT, request,
 				getTypeRefVoid());
 		// The response can't be null
 		assertThat(resultUpdate).isNotNull();
@@ -254,15 +264,9 @@ public class ${controllerClass}Test {
 
 	@Test
 	public void deleteNotFound() {
-		// Recover this ${entityInstance} and test if all is ok
-		ResponseEntity<${resourceClass}> result = this.restTemplate.getForEntity("/${entityInstance}/999", ${resourceClass}.class);
-		// The reponse can't be null
-		assertThat(result).isNotNull();
-		// The status code must be NOT_FOUND
-		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 		// Delete the ${entityInstance}
 		RequestEntity<${entityClass}> request = new RequestEntity<${entityClass}>(new ${entityClass}(), HttpMethod.DELETE, null);
-		ResponseEntity<Void> resultDelete = this.restTemplate.exchange("/${entityInstance}/9999", HttpMethod.DELETE, request,
+		ResponseEntity<Void> resultDelete = this.restTemplate.exchange("$fullPathForNotFound", HttpMethod.DELETE, request,
 				getTypeRefVoid());
 		// The response can't be null
 		assertThat(resultDelete).isNotNull();
@@ -307,6 +311,37 @@ public class ${controllerClass}Test {
 		assertThat(page.getMetadata().getTotalPages()).isEqualTo(7);
 	}
 
+#if($haveCriteria)
+	@Test
+	public void get${entityClass}sTestFilter() {
+		// Create an ${entityInstance}
+		${entityClass} ${entityInstance} = createMocK${entityClass}(${mockArgumentPk}${mockArgument});
+		RequestEntity<${entityClass}> request = null;
+		ResponseEntity<PagedResources<${resourceClass}>> result = null;
+		PagedResources<${resourceClass}> page = null;
+#foreach($field in $entity.nonKeyAttributes)
+#if($field.type == 'String')
+		// Test $field.name filter
+		// Set the value on entity and update
+		${entityInstance}.set$fn.capitalize($field.name)("c");
+		// Process update
+		request = new RequestEntity<${entityClass}>(${entityInstance}, HttpMethod.PUT, null);
+		this.restTemplate.exchange("${fullPath}", HttpMethod.PUT, request, getTypeRefVoid());
+		// Test $field.name filter
+		result = this.search("/${entityInstance}?size=20&$field.name=c");
+		// Response body must not be null
+		page = result.getBody();
+		assertThat(page).isNotNull();
+		assertThat(page.getMetadata().getTotalElements()).isEqualTo(1);
+		assertThat(page.getMetadata().getTotalPages()).isEqualTo(1);
+		for (${resourceClass} ${resourceInstance} : page.getContent()) {
+			assertThat(${resourceInstance}.get$fn.capitalize($field.name)()).startsWith("c");
+		}
+#end
+#end 
+	}
+#end
+
 	private ${entityClass} createMocK${entityClass}(${mockParamsPk}${mockParams}) {
 		${entityClass} ${entityInstance}Mock = new ${entityClass}();
 #foreach($field in $entity.KeyAttributes)
@@ -332,5 +367,4 @@ public class ${controllerClass}Test {
 		return new ParameterizedTypeReference<Void>() {
 		};
 	}
-
 }

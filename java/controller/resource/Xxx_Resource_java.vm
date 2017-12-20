@@ -24,14 +24,19 @@ public class $resourceClass extends ResourceSupport {
 
 	// Constructor
 	public $resourceClass() {
+		// Needed empty constructor for serialization
 	}
 
 #foreach($field in $entity.attributes)
-#if ($field.setter)    
-	public void ${field.setter}($field.type $field.name) {this.$field.name = $field.name;}
-#end
 #if ($field.getter && $field.name != 'id')    
-	public $field.type ${field.getter}() {return this.$field.name;}
+	public $field.type ${field.getter}() {
+		return this.$field.name;
+	}
 #end
-#end 
+#if ($field.setter)    
+	public void ${field.setter}($field.type $field.name) {
+		this.$field.name = $field.name;
+	}
+#end
+#end
 }

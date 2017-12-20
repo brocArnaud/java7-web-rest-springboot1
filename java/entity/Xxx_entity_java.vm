@@ -32,7 +32,6 @@ public class $entityClass implements Serializable {
     // ENTITY PRIMARY KEY ( BASED ON A SINGLE FIELD )
     //----------------------------------------------------------------------
 #foreach($field in $entity.keyAttributes)
-
 $jpa.fieldAnnotations(4, $field)
     private $field.type $field.name #if($field.hasInitialValue())= ${field.initialValue} #end; #if($field.isFK())// Foreign Key #end 
 #end
@@ -42,10 +41,10 @@ $jpa.fieldAnnotations(4, $field)
     // ENTITY DATA FIELDS 
     //----------------------------------------------------------------------    
 #foreach($field in $entity.nonKeyAttributes)
-
 $jpa.fieldAnnotations(4, $field)
     private $field.type $field.name #if($field.hasInitialValue())= ${field.initialValue} #end; #if($field.isFK())// Foreign Key #end 
 #end
+
 
     //----------------------------------------------------------------------
     // CONSTRUCTOR(S)
@@ -100,5 +99,24 @@ $jpa.fieldAnnotations(4, $field)
     //----------------------------------------------------------------------
     // toString METHOD
     //----------------------------------------------------------------------
-$java.toStringMethod($entity, $entity.nonKeyAttributes, "compositePrimaryKey", 4)
+ 	public String toString() {
+		StringBuilder sb = new StringBuilder(); 
+#if($compositeKey)
+		sb.append("[" + compositePrimaryKey + "]"); 
+#else
+#foreach( $field in $entity.keyAttributes )
+#if( $foreach.count  > 1 )
+		sb.append("|"); 
+#end
+		sb.append($field.name); 
+#end 
+#end
+#foreach( $field in $entity.nonKeyAttributes )
+#if( $foreach.count  > 1 )
+		sb.append("|"); 
+#end
+		sb.append($field.name); 
+#end
+        return sb.toString();
+    }
 }

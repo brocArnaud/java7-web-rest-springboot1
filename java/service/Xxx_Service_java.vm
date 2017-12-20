@@ -2,9 +2,13 @@
 #parse("include/var_entity.vm")
 ## Use macro resolve header
 #package($SRC)
+## use macro for feed $haveCriteria
+#haveCriteria()
 
 import ${pack_entity}.${entityClass};
+#if($haveCriteria)
 import ${pack_criteria}.${criteriaClass};
+#end
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -14,6 +18,7 @@ import org.springframework.data.domain.Pageable;
  */
 public interface $serviceInterface {
 
+#if($haveCriteria)
 	/**
 	 * Perform a pageable and filtered search.
 	 * @param pageable pagination configuration
@@ -21,7 +26,14 @@ public interface $serviceInterface {
 	 * @return a page of $entityInstance
 	 */
 	public Page<$entityClass> search(Pageable pageable, $criteriaClass criteria);
-
+#else
+	/**
+	 * Perform a pageable and filtered search.
+	 * @param pageable pagination configuration
+	 * @return a page of $entityInstance
+	 */
+	public Page<$entityClass> search(Pageable pageable);
+#end
 	/**
 	 * Recover an $entityInstance following an id.
 	 * @param id the given id
