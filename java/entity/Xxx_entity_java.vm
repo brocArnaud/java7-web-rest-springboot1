@@ -104,12 +104,14 @@ $jpa.fieldAnnotations(4, $field)
 #if($compositeKey)
 		sb.append("[" + compositePrimaryKey + "]"); 
 #else
+		sb.append("[");
 #foreach( $field in $entity.keyAttributes )
 #if( $foreach.count  > 1 )
 		sb.append("|"); 
 #end
 		sb.append($field.name); 
 #end 
+		sb.append("]");
 #end
 #foreach( $field in $entity.nonKeyAttributes )
 #if( $foreach.count  > 1 )
